@@ -1,5 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-  <head></head>
-  <body></body>
+    <head>
+        <style>
+            body {
+                background-color: gray;
+            }
+            #videoId {
+                background-color: green;
+                color: black;
+                border-radius: 5px;
+                border-color: silver;
+            }
+            #videoId::placeholder {
+                color: silver;
+                font-family: monospace;
+            }
+            h1 {
+                font-family: sans-serif;
+            }
+        </style>
+        <script>
+            const input = document.getElementById("videoId")
+            input.addEventListener("input", () => {
+                const api = fetch("")
+            })
+        </script>
+        <title>Youtube Live View</title>
+    </head>
+    <body>
+        <div>
+        <h1>YouView</h1>
+        <input id="videoId" placeholder="Type Video ID here"/>
+        </div>
+    </body>
 </html>
