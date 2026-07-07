@@ -1,36 +1,94 @@
 <!doctype html>
 <html>
-    <head>
-        <style>
-            body {
-                background-color: gray;
-            }
-            #videoId {
-                background-color: green;
-                color: black;
-                border-radius: 5px;
-                border-color: silver;
-            }
-            #videoId::placeholder {
-                color: silver;
-                font-family: monospace;
-            }
-            h1 {
-                font-family: sans-serif;
-            }
-        </style>
-        <script>
-            const input = document.getElementById("videoId")
-            input.addEventListener("input", () => {
-                const api = fetch("")
-            })
-        </script>
-        <title>Youtube Live View</title>
-    </head>
-    <body>
-        <div>
+
+<head>
+    <style>
+        body {
+            background-color: gray;
+        }
+
+        #videoId {
+            background-color: green;
+            color: black;
+            border-radius: 5px;
+            border: 2px solid silver;
+            padding: 5px;
+        }
+
+        #videoId::placeholder {
+            color: silver;
+            font-family: monospace;
+        }
+
+        h1 {
+            font-family: sans-serif;
+        }
+
+        #viewBox {
+            margin: 5% 0%;
+            border-radius: 25px;
+            border: 2px solid rgb(55, 55, 55);
+            padding: 15px;
+            width: fit-content;
+        }
+
+        #thumbnail {
+            border-radius: 15px;
+            max-width: 400px;
+            display: block;
+        }
+
+        #vidtitle {
+            font-family: sans-serif;
+            font-size: 20px;
+        }
+    </style>
+
+    <title>YouView</title>
+</head>
+
+<body>
+    <div>
         <h1>YouView</h1>
-        <input id="videoId" placeholder="Type Video ID here"/>
-        </div>
-    </body>
+        <input id="videoId" placeholder="Type Video ID here" />
+    </div>
+
+    <div id="viewBox">
+        <img id="thumbnail" />
+        <br>
+        <span id="vidtitle">Example Title</span>
+    </div>
+    <div id="apis">
+        <b>API's used:</b>
+        <br>
+        <img src="https://returnyoutubedislike.com/favicon.ico" width="24">
+        Return YouTube Dislike
+        <br>
+        ▶️ YouTube oEmbed
+    </div>
+    <script>
+        const input = document.getElementById("videoId");
+        const thumbnail = document.getElementById("thumbnail");
+        const title = document.getElementById("vidtitle");
+
+        input.addEventListener("input", async () => {
+            const id = input.value.trim();
+
+            if (id.length !== 11) return;
+
+            thumbnail.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+
+            try {
+                const data = await fetch(
+                    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}`
+                ).then(res => res.json());
+                
+                title.textContent = data.title;
+            } catch {
+                title.textContent = "Video not found";
+            }
+        });
+    </script>
+</body>
+
 </html>
