@@ -28,3 +28,5 @@ let api = {
             .then(data => JSON.parse(data))
     }
 };
+
+export default api;
