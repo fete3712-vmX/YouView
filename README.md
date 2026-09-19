@@ -4,7 +4,8 @@
 ![GitHub release](https://img.shields.io/github/v/release/fete3712-vmX/YouView?ver=1)
 ![Website Status](https://img.shields.io/badge/status-online-brightgreen)
 
-Free website, opensource. I don't care about forked repos, just please add .copye with data "Copied from YouView main repo"
+Free website, opensource. I don't care about forked repos.
+Pull requests reviewed and accepted.
 
 Uses 2 APIs:
 * Youtube oEmbed, Features: (thumbnail, title, etc.),
