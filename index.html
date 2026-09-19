@@ -1,91 +1,204 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <title>YouView</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: gray;
+            background-color: #181818;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        #videoId {
-            background-color: green;
-            color: black;
-            border-radius: 5px;
-            border: 2px solid silver;
-            padding: 5px;
-        }
-
-        #videoId::placeholder {
-            color: silver;
-            font-family: monospace;
+        .container {
+            width: 100%;
+            max-width: 420px;
         }
 
         h1 {
-            font-family: sans-serif;
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        #videoId {
+            width: 100%;
+            background-color: #282828;
+            color: #fff;
+            border: 1px solid #3f3f3f;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        #videoId:focus {
+            border-color: #ff0000;
+        }
+
+        #videoId::placeholder {
+            color: #888;
         }
 
         #viewBox {
-            margin: 5% 0%;
-            border-radius: 25px;
-            border: 2px solid rgb(55, 55, 55);
-            padding: 15px;
-            width: fit-content;
+            margin: 20px 0;
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 14px;
+            display: none;
         }
 
         #thumbnail {
-            border-radius: 15px;
-            max-width: 400px;
+            width: 100%;
+            border-radius: 6px;
             display: block;
+            margin-bottom: 12px;
         }
 
         #vidtitle {
-            font-family: sans-serif;
-            font-size: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.4;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .meta-info {
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.6;
+            border-top: 1px solid #333;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .meta-info b {
+            color: #ddd;
+        }
+
+        #apis {
+            font-size: 13px;
+            color: #777;
+            line-height: 1.8;
+            margin-top: 10px;
+        }
+
+        #apis img {
+            vertical-align: middle;
+            margin-right: 4px;
         }
     </style>
-
-    <title>YouView</title>
 </head>
 
 <body>
-    <div>
+    <div class="container">
         <h1>YouView</h1>
-        <input id="videoId" placeholder="Type Video ID here" />
+        <input id="videoId" placeholder="Paste YouTube link or 11-digit ID" />
+
+        <div id="viewBox">
+            <img id="thumbnail" alt="Thumbnail" />
+            <span id="vidtitle"></span>
+            
+            <div class="meta-info">
+                <div>Channel: <b id="channelName">-</b></div>
+                <div>Subscribers: <b id="subCount">-</b></div>
+                <div>Views: <b id="viewCount">-</b></div>
+            </div>
+        </div>
+
+        <div id="apis">
+            <b>APIs used:</b><br>
+            <img src="https://returnyoutubedislike.com/favicon.ico" width="16" height="16"> Return YouTube Dislike (Views)<br>
+            YouTube oEmbed (Title & Channel)<br>
+            banner.yt (Subscriber Count)
+        </div>
     </div>
 
-    <div id="viewBox">
-        <img id="thumbnail" />
-        <br>
-        <span id="vidtitle">Example Title</span>
-    </div>
-    <div id="apis">
-        <b>API's used:</b>
-        <br>
-        <img src="https://returnyoutubedislike.com/favicon.ico" width="24">
-        Return YouTube Dislike
-        <br>
-        ▶️ YouTube oEmbed
-    </div>
     <script>
         const input = document.getElementById("videoId");
+        const viewBox = document.getElementById("viewBox");
         const thumbnail = document.getElementById("thumbnail");
         const title = document.getElementById("vidtitle");
+        const channelName = document.getElementById("channelName");
+        const subCount = document.getElementById("subCount");
+        const viewCount = document.getElementById("viewCount");
+
+        function getId(value) {
+            value = value.trim();
+            if (value.length === 11) return value;
+            const match = value.match(/(?:v=|\/|youtu\.be\/|shorts\/)([0-9A-Za-z_-]{11})/);
+            return match ? match[1] : null;
+        }
 
         input.addEventListener("input", async () => {
-            const id = input.value.trim();
+            const id = getId(input.value);
 
-            if (id.length !== 11) return;
+            if (!id) {
+                viewBox.style.display = "none";
+                return;
+            }
 
+            viewBox.style.display = "block";
             thumbnail.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+            title.textContent = "Loading...";
+            channelName.textContent = "...";
+            subCount.textContent = "...";
+            viewCount.textContent = "...";
 
+            // 1. Fetch Title & Channel URL (oEmbed)
             try {
-                const data = await fetch(
-                    `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}`
-                ).then(res => res.json());
+                const oembedRes = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
+                const oembedData = await oembedRes.json();
                 
-                title.textContent = data.title;
+                title.textContent = oembedData.title || "Unknown Title";
+                channelName.textContent = oembedData.author_name || "Unknown Channel";
+
+                // 2. Fetch Subscriber Count using banner.yt
+                if (oembedData.author_url) {
+                    let channelIdentifier = oembedData.author_url.split("/").pop();
+                    let type = channelIdentifier.startsWith("@") ? "handle" : "id";
+
+                    try {
+                        const bannerRes = await fetch(`https://banner.yt/api/channel/${encodeURIComponent(channelIdentifier)}?type=${type}`);
+                        const bannerData = await bannerRes.json();
+                        
+                        const subs = bannerData.subscriberCount || bannerData.subscribers || (bannerData.stats && bannerData.stats.subscribers);
+                        
+                        if (subs !== undefined) {
+                            subCount.textContent = Number(subs).toLocaleString();
+                        } else {
+                            subCount.textContent = "Unavailable";
+                        }
+                    } catch {
+                        subCount.textContent = "Unavailable";
+                    }
+                }
             } catch {
-                title.textContent = "Video not found";
+                title.textContent = "Error loading video details";
+            }
+
+            // 3. Fetch Views (Return YouTube Dislike API)
+            try {
+                const rydRes = await fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${id}`);
+                const rydData = await rydRes.json();
+                if (rydData.viewCount !== undefined) {
+                    viewCount.textContent = Number(rydData.viewCount).toLocaleString();
+                } else {
+                    viewCount.textContent = "Unavailable";
+                }
+            } catch {
+                viewCount.textContent = "Unavailable";
             }
         });
     </script>
