@@ -1,0 +1,35 @@
+name: Manage Inactive Issues
+
+on:
+  schedule:
+    # Runs every day at 05:30 UTC
+    - cron: '30 5 * * *'
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # --- Inactivity / Warning Configuration ---
+          # Days of inactivity before adding the warning message
+          days-before-issue-stale: 14
+          stale-issue-message: >
+            This issue has been inactive for 14 days and has been marked as stale.
+            If no further activity occurs, it will be automatically closed.
+
+          # --- Closing Configuration ---
+          # Days after being marked stale before closing (14 + 46 = 60 days total)
+          days-before-issue-close: 46
+          close-issue-message: >
+            This issue has been automatically closed as not planned due to inactivity.
+          close-issue-reason: 'not_planned'
+
+          # Optional: Do not apply this to Pull Requests
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
