@@ -2,9 +2,8 @@ name: Manage Inactive Issues
 
 on:
   schedule:
-    # Runs every day at 05:30 UTC
-    - cron: '30 5 * * *'
-  workflow_dispatch: # Allows manual trigger from the Actions tab
+    - cron: '*/30 * * * *'
+  workflow_dispatch: 
 
 permissions:
   issues: write

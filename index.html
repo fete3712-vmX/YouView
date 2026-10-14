@@ -3,204 +3,973 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouView</title>
     <style>
+        :root {
+            --bg-color: #0b0b0b;
+            --surface-color: #161616;
+            --surface-card: #202020;
+            --surface-hover: #2a2a2a;
+            --border-color: #313131;
+            --accent-color: #ff0033;
+            --accent-green: #2ba640;
+            --accent-gold: #f59e0b;
+            --accent-blue: #3ea6ff;
+            --text-primary: #f1f1f1;
+            --text-secondary: #9a9a9a;
+            --radius-lg: 14px;
+            --radius-md: 8px;
+        }
+
         * {
             box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            background-color: #181818;
-            color: #fff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 40px 20px;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            padding: 36px 16px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
         }
 
         .container {
             width: 100%;
-            max-width: 420px;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4px;
         }
 
         h1 {
-            font-size: 26px;
-            text-align: center;
-            margin-bottom: 16px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        h1 span {
+            color: var(--accent-color);
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
         #videoId {
             width: 100%;
-            background-color: #282828;
-            color: #fff;
-            border: 1px solid #3f3f3f;
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-size: 15px;
+            background-color: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 13px 110px 13px 16px;
+            font-size: 14px;
             outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         #videoId:focus {
-            border-color: #ff0000;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(255, 0, 51, 0.2);
         }
 
-        #videoId::placeholder {
-            color: #888;
+        .input-actions {
+            position: absolute;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icon, .paste-btn {
+            background: var(--surface-hover);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .history-list {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-height: 20px;
+        }
+
+        .history-chip {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #viewBox {
-            margin: 20px 0;
-            background-color: #222;
-            border: 1px solid #333;
-            border-radius: 10px;
-            padding: 14px;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
             display: none;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .media-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 12px;
         }
 
         #thumbnail {
             width: 100%;
-            border-radius: 6px;
+            height: 100%;
+            object-fit: cover;
             display: block;
-            margin-bottom: 12px;
+        }
+
+        .play-btn-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .play-icon {
+            width: 52px;
+            height: 38px;
+            background-color: rgba(30, 30, 30, 0.85);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .play-triangle {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 7px 0 7px 13px;
+            border-color: transparent transparent transparent #fff;
+            margin-left: 2px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         #vidtitle {
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             line-height: 1.4;
             display: block;
+            margin-bottom: 12px;
+            word-break: break-word;
+        }
+
+        /* Stats Grid */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card {
+            background-color: var(--surface-card);
+            border-radius: var(--radius-md);
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-card.full-width {
+            grid-column: span 2;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Ratio Bar */
+        .ratio-container {
+            margin-bottom: 14px;
+        }
+
+        .ratio-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .ratio-bar {
+            height: 4px;
+            background-color: #444;
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .ratio-fill-likes {
+            background-color: var(--accent-green);
+            height: 100%;
+            width: 50%;
+        }
+
+        .ratio-fill-dislikes {
+            background-color: var(--accent-color);
+            height: 100%;
+            flex-grow: 1;
+        }
+
+        /* Revenue Card */
+        .rev-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(32, 32, 32, 0.9) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-bottom: 12px;
+        }
+
+        .rev-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
             margin-bottom: 8px;
         }
 
-        .meta-info {
-            font-size: 14px;
-            color: #aaa;
-            line-height: 1.6;
-            border-top: 1px solid #333;
-            padding-top: 8px;
-            margin-top: 8px;
+        .rev-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-gold);
         }
 
-        .meta-info b {
+        .rev-niche-select {
+            background: #111;
             color: #ddd;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 11px;
+            outline: none;
         }
 
-        #apis {
+        .rev-big-number {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .rev-range {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .rev-range b {
+            color: #ccc;
+        }
+
+        /* WATERMARKED DOWNLOAD SECTION */
+        .download-box {
+            background: var(--surface-card);
+            border: 1px solid #3a3a3a;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #cc0029 100%);
+            color: #fff;
+            border: none;
+            padding: 11px 14px;
+            border-radius: var(--radius-md);
             font-size: 13px;
-            color: #777;
-            line-height: 1.8;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .download-btn:hover {
+            opacity: 0.95;
+        }
+
+        .download-btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .download-progress {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .download-status-text {
+            font-size: 12px;
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: #2b2b2b;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-gold);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        /* Collapsibles */
+        details {
+            background-color: var(--surface-card);
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        details summary {
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .accordion-content {
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .tool-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .tool-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid var(--border-color);
+            color: #ccc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .tool-btn {
+            background: var(--surface-hover);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 8px;
             margin-top: 10px;
         }
 
-        #apis img {
-            vertical-align: middle;
-            margin-right: 4px;
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #apis {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.8;
+            border-top: 1px solid #222;
+            padding-top: 12px;
+        }
+
+        /* Hidden Offscreen Canvas & Video processing elements */
+        #hiddenCanvas, #hiddenVideo {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            visibility: hidden;
+            pointer-events: none;
         }
     </style>
 </head>
 
 <body>
+    <!-- Hidden processing elements for watermark recording -->
+    <canvas id="hiddenCanvas"></canvas>
+    <video id="hiddenVideo" muted playsinline crossorigin="anonymous"></video>
+
     <div class="container">
-        <h1>YouView</h1>
-        <input id="videoId" placeholder="Paste YouTube link or 11-digit ID" />
+        <header>
+            <h1>You<span>View</span></h1>
+            <p class="subtitle">Complete YouTube Inspector & Watermarked Downloader</p>
+        </header>
+
+        <div class="input-group">
+            <input id="videoId" placeholder="Paste YouTube link or ID..." spellcheck="false" autocomplete="off" />
+            <div class="input-actions">
+                <button class="btn-icon" id="clearBtn" title="Clear">✕</button>
+                <button class="paste-btn" id="pasteBtn" type="button">Paste</button>
+            </div>
+        </div>
+
+        <div class="history-list" id="historyList"></div>
 
         <div id="viewBox">
-            <img id="thumbnail" alt="Thumbnail" />
-            <span id="vidtitle"></span>
-            
-            <div class="meta-info">
-                <div>Channel: <b id="channelName">-</b></div>
-                <div>Subscribers: <b id="subCount">-</b></div>
-                <div>Views: <b id="viewCount">-</b></div>
+            <div class="media-container" id="mediaBox">
+                <img id="thumbnail" alt="Video Thumbnail" />
+                <div class="play-btn-overlay" id="playBtn" title="Click to Play In-Page">
+                    <div class="play-icon"><div class="play-triangle"></div></div>
+                </div>
+            </div>
+
+            <span id="vidtitle">Loading...</span>
+
+            <!-- Primary Metadata -->
+            <div class="meta-grid">
+                <div class="stat-card full-width">
+                    <span class="stat-label">Channel</span>
+                    <span class="stat-value" id="channelName">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Views</span>
+                    <span class="stat-value" id="viewCount">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Subscribers</span>
+                    <span class="stat-value" id="subCount">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Likes</span>
+                    <span class="stat-value" id="likeCount">-</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Dislikes</span>
+                    <span class="stat-value" id="dislikeCount">-</span>
+                </div>
+            </div>
+
+            <!-- Like/Dislike Ratio Bar -->
+            <div class="ratio-container">
+                <div class="ratio-labels">
+                    <span id="ratioText">Rating: -</span>
+                    <span id="voteTotals">0 votes</span>
+                </div>
+                <div class="ratio-bar">
+                    <div class="ratio-fill-likes" id="ratioBar"></div>
+                    <div class="ratio-fill-dislikes"></div>
+                </div>
+            </div>
+
+            <!-- WATERMARKED VIDEO DOWNLOAD MODULE -->
+            <div class="download-box">
+                <button class="download-btn" id="dlVideoBtn">
+                    📥 Download Watermarked Video (MP4)
+                </button>
+                <div class="download-progress" id="dlProgress">
+                    <span class="download-status-text" id="dlStatus">Fetching stream...</span>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="dlBar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estimated Revenue -->
+            <div class="rev-card">
+                <div class="rev-header">
+                    <span class="rev-title">💰 Estimated Ad Revenue</span>
+                    <select class="rev-niche-select" id="nicheSelect">
+                        <option value="gaming">Gaming / Memes (RPM ~$1.80)</option>
+                        <option value="general" selected>General / Lifestyle (RPM ~$3.50)</option>
+                        <option value="tech">Tech / Review (RPM ~$6.00)</option>
+                        <option value="finance">Finance / Business (RPM ~$12.00)</option>
+                    </select>
+                </div>
+                <div class="rev-big-number" id="revAverage">$0.00</div>
+                <div class="rev-range">
+                    <span>Est. Range: <b id="revRange">$0 — $0</b></span>
+                    <span>RPM Base: <b id="rpmDisplay">$3.50</b></span>
+                </div>
+            </div>
+
+            <!-- Quick Share Links -->
+            <details>
+                <summary>Share & Embed Tools</summary>
+                <div class="accordion-content">
+                    <div class="tool-row">
+                        <input class="tool-input" id="cleanLink" readonly />
+                        <button class="tool-btn" onclick="navigator.clipboard.writeText(cleanLink.value)">Copy</button>
+                    </div>
+                </div>
+            </details>
+
+            <div class="actions-row">
+                <a class="action-btn" id="openLinkBtn" target="_blank" rel="noopener">Open YouTube ↗</a>
+                <button class="action-btn" id="exportJsonBtn">Export JSON</button>
             </div>
         </div>
 
         <div id="apis">
-            <b>APIs used:</b><br>
-            <img src="https://returnyoutubedislike.com/favicon.ico" width="16" height="16"> Return YouTube Dislike (Views)<br>
-            YouTube oEmbed (Title & Channel)<br>
-            banner.yt (Subscriber Count)
+            <b>Sources:</b> YouTube oEmbed • Return YouTube Dislike • Cobalt Media Engine
         </div>
     </div>
 
     <script>
         const input = document.getElementById("videoId");
+        const clearBtn = document.getElementById("clearBtn");
+        const pasteBtn = document.getElementById("pasteBtn");
         const viewBox = document.getElementById("viewBox");
-        const thumbnail = document.getElementById("thumbnail");
+        const mediaBox = document.getElementById("mediaBox");
         const title = document.getElementById("vidtitle");
         const channelName = document.getElementById("channelName");
         const subCount = document.getElementById("subCount");
         const viewCount = document.getElementById("viewCount");
+        const likeCount = document.getElementById("likeCount");
+        const dislikeCount = document.getElementById("dislikeCount");
+        const ratioBar = document.getElementById("ratioBar");
+        const ratioText = document.getElementById("ratioText");
+        const voteTotals = document.getElementById("voteTotals");
+        const cleanLink = document.getElementById("cleanLink");
+        const openLinkBtn = document.getElementById("openLinkBtn");
 
-        function getId(value) {
+        // Revenue Elements
+        const nicheSelect = document.getElementById("nicheSelect");
+        const revAverage = document.getElementById("revAverage");
+        const revRange = document.getElementById("revRange");
+        const rpmDisplay = document.getElementById("rpmDisplay");
+
+        // Watermark Downloader Elements
+        const dlVideoBtn = document.getElementById("dlVideoBtn");
+        const dlProgress = document.getElementById("dlProgress");
+        const dlStatus = document.getElementById("dlStatus");
+        const dlBar = document.getElementById("dlBar");
+        const hiddenVideo = document.getElementById("hiddenVideo");
+        const hiddenCanvas = document.getElementById("hiddenCanvas");
+
+        let currentController = null;
+        let debounceTimer = null;
+        let activeVideoId = null;
+        let currentViews = 0;
+        let currentAuthorName = "Unknown";
+        let currentMetadata = {};
+
+        const RPM_PROFILES = {
+            gaming:   { avg: 1.80, min: 0.90, max: 2.80 },
+            general:  { avg: 3.50, min: 2.00, max: 5.00 },
+            tech:     { avg: 6.00, min: 4.00, max: 9.00 },
+            finance:  { avg: 12.00, min: 7.50, max: 18.00 }
+        };
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: num >= 1000 ? 0 : 2
+            }).format(num);
+        }
+
+        function calculateRevenue(views) {
+            if (!views || views <= 0) {
+                revAverage.textContent = "$0.00";
+                revRange.textContent = "$0 — $0";
+                return;
+            }
+            const profile = RPM_PROFILES[nicheSelect.value];
+            rpmDisplay.textContent = `$${profile.avg.toFixed(2)}`;
+            const avg = (views / 1000) * profile.avg;
+            revAverage.textContent = formatCurrency(avg);
+            revRange.textContent = `${formatCurrency((views / 1000) * profile.min)} — ${formatCurrency((views / 1000) * profile.max)}`;
+        }
+
+        nicheSelect.addEventListener("change", () => calculateRevenue(currentViews));
+
+        function extractVideoId(value) {
             value = value.trim();
-            if (value.length === 11) return value;
-            const match = value.match(/(?:v=|\/|youtu\.be\/|shorts\/)([0-9A-Za-z_-]{11})/);
+            if (/^[a-zA-Z0-9_-]{11}$/.test(value)) return value;
+            const match = value.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|live\/|watch\?(?:.*&)?v=))([a-zA-Z0-9_-]{11})/);
             return match ? match[1] : null;
         }
 
-        input.addEventListener("input", async () => {
-            const id = getId(input.value);
+        async function fetchVideoData(id) {
+            if (currentController) currentController.abort();
+            currentController = new AbortController();
+            const { signal } = currentController;
 
-            if (!id) {
-                viewBox.style.display = "none";
-                return;
-            }
+            activeVideoId = id;
+            currentViews = 0;
+            currentMetadata = { id };
+
+            mediaBox.innerHTML = `
+                <img id="thumbnail" alt="Video Thumbnail" />
+                <div class="play-btn-overlay" id="playBtn" title="Play">
+                    <div class="play-icon"><div class="play-triangle"></div></div>
+                </div>
+            `;
+            document.getElementById("playBtn").addEventListener("click", () => embedPlayer(id));
 
             viewBox.style.display = "block";
-            thumbnail.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
             title.textContent = "Loading...";
             channelName.textContent = "...";
             subCount.textContent = "...";
             viewCount.textContent = "...";
+            likeCount.textContent = "...";
+            dislikeCount.textContent = "...";
+            revAverage.textContent = "Calculating...";
 
-            // 1. Fetch Title & Channel URL (oEmbed)
+            const directUrl = `https://youtu.be/${id}`;
+            cleanLink.value = directUrl;
+            openLinkBtn.href = directUrl;
+
+            const maxres = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
+            const hq = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+            const mainThumb = document.getElementById("thumbnail");
+            const testImg = new Image();
+            testImg.onload = () => { mainThumb.src = (testImg.naturalWidth === 120) ? hq : maxres; };
+            testImg.onerror = () => { mainThumb.src = hq; };
+            testImg.src = maxres;
+
+            // 1. Fetch metadata via oEmbed
             try {
-                const oembedRes = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
-                const oembedData = await oembedRes.json();
-                
-                title.textContent = oembedData.title || "Unknown Title";
-                channelName.textContent = oembedData.author_name || "Unknown Channel";
+                const oembedRes = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`, { signal });
+                const oembed = await oembedRes.json();
+                title.textContent = oembed.title || "Unknown Title";
+                currentAuthorName = oembed.author_name || "Unknown Creator";
+                channelName.textContent = currentAuthorName;
+                currentMetadata.title = oembed.title;
+                currentMetadata.channel = currentAuthorName;
 
-                // 2. Fetch Subscriber Count using banner.yt
-                if (oembedData.author_url) {
-                    let channelIdentifier = oembedData.author_url.split("/").pop();
-                    let type = channelIdentifier.startsWith("@") ? "handle" : "id";
+                saveToHistory(id, oembed.title || id);
 
-                    try {
-                        const bannerRes = await fetch(`https://banner.yt/api/channel/${encodeURIComponent(channelIdentifier)}?type=${type}`);
-                        const bannerData = await bannerRes.json();
-                        
-                        const subs = bannerData.subscriberCount || bannerData.subscribers || (bannerData.stats && bannerData.stats.subscribers);
-                        
-                        if (subs !== undefined) {
-                            subCount.textContent = Number(subs).toLocaleString();
-                        } else {
-                            subCount.textContent = "Unavailable";
-                        }
-                    } catch {
-                        subCount.textContent = "Unavailable";
+                if (oembed.author_url) {
+                    const identifier = oembed.author_url.split("/").filter(Boolean).pop();
+                    const type = identifier.startsWith("@") ? "handle" : "id";
+                    fetch(`https://banner.yt/api/channel/${encodeURIComponent(identifier)}?type=${type}`, { signal })
+                        .then(r => r.json())
+                        .then(data => {
+                            const subs = data.subscriberCount ?? data.subscribers ?? data.stats?.subscribers;
+                            subCount.textContent = subs !== undefined ? Number(subs).toLocaleString() : "N/A";
+                        }).catch(() => {});
+                }
+            } catch (err) {
+                if (err.name !== "AbortError") title.textContent = "Failed to load video details";
+            }
+
+            // 2. Fetch Views & Likes via RYD
+            try {
+                const rydRes = await fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${id}`, { signal });
+                const ryd = await rydRes.json();
+                if (!signal.aborted) {
+                    currentViews = ryd.viewCount || 0;
+                    viewCount.textContent = Number(currentViews).toLocaleString();
+                    likeCount.textContent = Number(ryd.likes || 0).toLocaleString();
+                    dislikeCount.textContent = Number(ryd.dislikes || 0).toLocaleString();
+                    calculateRevenue(currentViews);
+
+                    const totalVotes = (ryd.likes || 0) + (ryd.dislikes || 0);
+                    if (totalVotes > 0) {
+                        const likePercent = (((ryd.likes || 0) / totalVotes) * 100).toFixed(1);
+                        ratioBar.style.width = `${likePercent}%`;
+                        ratioText.textContent = `Rating: ${likePercent}% Likes`;
+                        voteTotals.textContent = `${totalVotes.toLocaleString()} votes`;
                     }
                 }
             } catch {
-                title.textContent = "Error loading video details";
+                viewCount.textContent = "N/A";
             }
+        }
 
-            // 3. Fetch Views (Return YouTube Dislike API)
+        function embedPlayer(id) {
+            mediaBox.innerHTML = `
+                <iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1" allowfullscreen></iframe>
+            `;
+        }
+
+        // ==========================================
+        // WATERMARKED VIDEO PROCESSING & RECORDER
+        // ==========================================
+        dlVideoBtn.addEventListener("click", async () => {
+            if (!activeVideoId) return;
+
+            dlVideoBtn.disabled = true;
+            dlProgress.style.display = "flex";
+            dlStatus.textContent = "Connecting to Cobalt video engine...";
+            dlBar.style.width = "15%";
+
             try {
-                const rydRes = await fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${id}`);
-                const rydData = await rydRes.json();
-                if (rydData.viewCount !== undefined) {
-                    viewCount.textContent = Number(rydData.viewCount).toLocaleString();
-                } else {
-                    viewCount.textContent = "Unavailable";
+                // Request stream URL from Cobalt public API
+                const cobaltRes = await fetch("https://api.cobalt.tools/api/json", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        url: `https://www.youtube.com/watch?v=${activeVideoId}`,
+                        vQuality: "720"
+                    })
+                });
+
+                const cobaltData = await cobaltRes.json();
+                const streamUrl = cobaltData.url;
+
+                if (!streamUrl) {
+                    throw new Error("Unable to retrieve playable stream.");
                 }
-            } catch {
-                viewCount.textContent = "Unavailable";
+
+                dlStatus.textContent = "Buffering video stream...";
+                dlBar.style.width = "40%";
+
+                hiddenVideo.src = streamUrl;
+                hiddenVideo.load();
+
+                await new Promise((resolve, reject) => {
+                    hiddenVideo.onloadedmetadata = () => resolve();
+                    hiddenVideo.onerror = () => reject(new Error("CORS or format blocked by browser."));
+                });
+
+                // Match canvas to video dimensions
+                const width = hiddenVideo.videoWidth || 1280;
+                const height = hiddenVideo.videoHeight || 720;
+                hiddenCanvas.width = width;
+                hiddenCanvas.height = height;
+
+                const ctx = hiddenCanvas.getContext("2d");
+                const stream = hiddenCanvas.captureStream(30);
+
+                // Use MediaRecorder to encode watermarked frames
+                const mimeType = MediaRecorder.isTypeSupported("video/webm; codecs=vp9") ? "video/webm; codecs=vp9" : "video/webm";
+                const recorder = new MediaRecorder(stream, { mimeType });
+                const recordedChunks = [];
+
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) recordedChunks.push(e.data);
+                };
+
+                recorder.onstop = () => {
+                    dlStatus.textContent = "Finalizing file download...";
+                    dlBar.style.width = "100%";
+                    const blob = new Blob(recordedChunks, { type: "video/mp4" });
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = downloadUrl;
+                    a.download = `YouView-${activeVideoId}.mp4`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(downloadUrl);
+
+                    dlStatus.textContent = "Download complete!";
+                    setTimeout(() => {
+                        dlProgress.style.display = "none";
+                        dlVideoBtn.disabled = false;
+                        dlBar.style.width = "0%";
+                    }, 2500);
+                };
+
+                recorder.start();
+                hiddenVideo.play();
+                dlStatus.textContent = "Burning center watermark & recording...";
+
+                // Frame-by-frame rendering loop
+                function drawFrame() {
+                    if (hiddenVideo.paused || hiddenVideo.ended) {
+                        recorder.stop();
+                        return;
+                    }
+
+                    // 1. Draw base video frame
+                    ctx.drawImage(hiddenVideo, 0, 0, width, height);
+
+                    // 2. Draw Center Watermark Box
+                    const badgeWidth = Math.min(width * 0.7, 520);
+                    const badgeHeight = 90;
+                    const badgeX = (width - badgeWidth) / 2;
+                    const badgeY = (height - badgeHeight) / 2;
+
+                    // Translucent dark pill background
+                    ctx.save();
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+                    ctx.beginPath();
+                    ctx.roundRect(badgeX, badgeY, badgeWidth, badgeHeight, 14);
+                    ctx.fill();
+
+                    // Subtle border outline
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Text Line 1: Downloaded Using YouView
+                    ctx.fillStyle = "#ffffff";
+                    ctx.font = `bold ${Math.round(badgeHeight * 0.28)}px sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("Downloaded Using YouView", width / 2, badgeY + 30);
+
+                    // Text Line 2: Creator: @{creator}
+                    ctx.fillStyle = "#ff0033";
+                    ctx.font = `600 ${Math.round(badgeHeight * 0.22)}px sans-serif`;
+                    const cleanCreator = currentAuthorName.replace(/^@/, '');
+                    ctx.fillText(`Creator: @${cleanCreator}`, width / 2, badgeY + 62);
+                    ctx.restore();
+
+                    // Update UI Progress Bar
+                    const progress = (hiddenVideo.currentTime / hiddenVideo.duration) * 100;
+                    dlBar.style.width = `${Math.min(95, 40 + progress * 0.55)}%`;
+
+                    requestAnimationFrame(drawFrame);
+                }
+
+                drawFrame();
+
+            } catch (err) {
+                console.error(err);
+                dlStatus.textContent = "Direct recording failed. Fallback to direct link.";
+                setTimeout(() => {
+                    dlProgress.style.display = "none";
+                    dlVideoBtn.disabled = false;
+                }, 3000);
             }
         });
+
+        // Search & History Logic
+        clearBtn.onclick = () => {
+            input.value = "";
+            viewBox.style.display = "none";
+            if (currentController) currentController.abort();
+            input.focus();
+        };
+
+        pasteBtn.onclick = async () => {
+            try {
+                input.value = await navigator.clipboard.readText();
+                input.dispatchEvent(new Event("input"));
+            } catch {
+                input.focus();
+            }
+        };
+
+        function getHistory() {
+            try { return JSON.parse(localStorage.getItem("youview_history")) || []; } catch { return []; }
+        }
+
+        function saveToHistory(id, title) {
+            let hist = getHistory().filter(item => item.id !== id);
+            hist.unshift({ id, title });
+            localStorage.setItem("youview_history", JSON.stringify(hist.slice(0, 4)));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById("historyList");
+            list.innerHTML = "";
+            getHistory().forEach(item => {
+                const chip = document.createElement("button");
+                chip.className = "history-chip";
+                chip.textContent = item.title;
+                chip.onclick = () => {
+                    input.value = item.id;
+                    input.dispatchEvent(new Event("input"));
+                };
+                list.appendChild(chip);
+            });
+        }
+
+        input.addEventListener("input", () => {
+            clearTimeout(debounceTimer);
+            const id = extractVideoId(input.value);
+            if (!id) {
+                if (currentController) currentController.abort();
+                viewBox.style.display = "none";
+                return;
+            }
+            debounceTimer = setTimeout(() => fetchVideoData(id), 250);
+        });
+
+        renderHistory();
     </script>
 </body>
 
