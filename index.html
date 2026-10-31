@@ -591,6 +591,18 @@
                 <a class="action-btn" id="openLinkBtn" target="_blank" rel="noopener">Open YouTube ↗</a>
                 <button class="action-btn" id="exportJsonBtn">Export JSON</button>
             </div>
+            <div class="actions-row">
+                <button class="action-btn" id="favoriteBtn" type="button">☆ Add to Watch Later</button>
+                <button class="action-btn" id="copyTitleBtn" type="button">Copy title</button>
+            </div>
+            <details id="watchLaterDetails">
+                <summary>Watch Later <span id="favoriteCount">(0)</span></summary>
+                <div class="accordion-content">
+                    <div id="favoritesList" class="history-list"></div>
+                    <button class="tool-btn" id="clearFavoritesBtn" type="button">Clear Watch Later</button>
+                </div>
+            </details>
+            <p id="featureStatus" role="status" style="font-size:12px;color:var(--text-secondary);min-height:16px"></p>
         </div>
 
         <div id="apis">
@@ -968,6 +980,82 @@
             }
             debounceTimer = setTimeout(() => fetchVideoData(id), 250);
         });
+
+
+        // Watch Later: stored locally in this browser.
+        const favoriteBtn = document.getElementById("favoriteBtn");
+        const favoritesList = document.getElementById("favoritesList");
+        const favoriteCount = document.getElementById("favoriteCount");
+        const featureStatus = document.getElementById("featureStatus");
+        const getFavorites = () => {
+            try {
+                const data = JSON.parse(localStorage.getItem("youview_favorites") || "[]");
+                return Array.isArray(data) ? data : [];
+            } catch { return []; }
+        };
+        const setFavorites = (items) => {
+            try {
+                localStorage.setItem("youview_favorites", JSON.stringify(items));
+                renderFavorites();
+            } catch {
+                featureStatus.textContent = "Could not save Watch Later. Browser storage may be disabled.";
+            }
+        };
+        function renderFavorites() {
+            const items = getFavorites();
+            favoritesList.replaceChildren();
+            favoriteCount.textContent = "(" + items.length + ")";
+            items.forEach(item => {
+                const chip = document.createElement("button");
+                chip.className = "history-chip";
+                chip.type = "button";
+                chip.textContent = item.title || item.id;
+                chip.title = "Load " + (item.title || item.id);
+                chip.addEventListener("click", () => {
+                    input.value = item.id;
+                    input.dispatchEvent(new Event("input"));
+                    document.getElementById("watchLaterDetails").open = false;
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                });
+                favoritesList.appendChild(chip);
+            });
+            favoriteBtn.disabled = !activeVideoId;
+            const saved = items.some(item => item.id === activeVideoId);
+            favoriteBtn.textContent = saved ? "★ Saved to Watch Later" : "☆ Add to Watch Later";
+        }
+        favoriteBtn.addEventListener("click", () => {
+            if (!activeVideoId) return;
+            const items = getFavorites();
+            const existing = items.some(item => item.id === activeVideoId);
+            if (existing) {
+                setFavorites(items.filter(item => item.id !== activeVideoId));
+                featureStatus.textContent = "Removed from Watch Later.";
+            } else {
+                setFavorites([{ id: activeVideoId, title: title.textContent || activeVideoId }, ...items.filter(item => item.id !== activeVideoId)].slice(0, 100));
+                featureStatus.textContent = "Saved to Watch Later on this browser.";
+            }
+        });
+        document.getElementById("clearFavoritesBtn").addEventListener("click", () => {
+            if (getFavorites().length && confirm("Clear your entire Watch Later list?")) {
+                setFavorites([]);
+                featureStatus.textContent = "Watch Later cleared.";
+            }
+        });
+        document.getElementById("copyTitleBtn").addEventListener("click", async () => {
+            if (!activeVideoId) return;
+            try {
+                await navigator.clipboard.writeText(title.textContent || "");
+                featureStatus.textContent = "Video title copied.";
+            } catch {
+                featureStatus.textContent = "Clipboard access was blocked by your browser.";
+            }
+        });
+        const originalFetchVideoData = fetchVideoData;
+        fetchVideoData = async function(id) {
+            await originalFetchVideoData(id);
+            renderFavorites();
+        };
+        renderFavorites();
 
         renderHistory();
     </script>
